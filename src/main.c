@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include "win_manager/win_manager.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define KEY_ESC 27
 #define KEY_DELETE 127
@@ -65,23 +66,26 @@ int main(int argc, char *argv[])
             break;
 
         case CTRL_S:
-            printf("h: %d, w: %d", h, w);
 
-            int sd_h = 10;
-            int sd_w = 100;
+            int sd_h = 8;
+            int sd_w = 50;
 
-            int sd_start_y = (h-sd_h)/2;
-            int sd_start_x = (w-sd_w)/2;
+            int sd_start_y = (h - sd_h) / 2;
+            int sd_start_x = (w - sd_w) / 2;
 
             WINDOW *save_dialog = create_newwindow(sd_h, sd_w, sd_start_y, sd_start_x);
+
+            char *line1 = "Do you want to save this file?";
+            char *line2 = "[Y]es\t[N]o";
+
+            long line1_x = (sd_w - strlen(line1)) / 2;
+            long line2_x = (sd_w - strlen(line2)) / 2;
+
+            mvwprintw(save_dialog, (sd_h / 2) - 1, line1_x, "%s", line1);
+            mvwprintw(save_dialog, (sd_h / 2) + 1, line2_x, "%s", line2);
+
             wrefresh(save_dialog);
 
-            wmove(save_dialog, sd_h/2, (sd_w-70)/2);
-            wprintw(save_dialog, "Do you want to save this file?\n\t\t\t [Y]es [N]o\n");
-            
-            wrefresh(save_dialog);
-
-            refresh();
             break;
 
         default:
