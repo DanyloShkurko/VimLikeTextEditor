@@ -1,5 +1,5 @@
 #include <ncurses.h>
-#include "win_manager/win_manager.h"
+#include "file_manager/file_manager.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,95 +7,68 @@
 #define KEY_DELETE 127
 #define CTRL_S 19
 
+#define N "NORMAL"
+#define I "INSERT"
+#define V "VIEW"
+
 int main(int argc, char *argv[])
 {
-    int curx = 0, cury = 0, h, w;
-    int ch;
+
     initscr();
-    raw();
-
-    getmaxyx(stdscr, h, w);
-
     noecho();
+    cbreak();
 
-    keypad(stdscr, true);
+    int num_bar_w = 5;
+    int parent_x, parent_y;
+    int cursor_x = 0, cursor_y = 0;
+    int last_line = 1;
 
-    printw("Press ESC to exit");
-    refresh();
+    getmaxyx(stdscr, parent_y, parent_x);
 
-    while ((ch = getch()) != KEY_ESC)
-    {
-        switch (ch)
-        {
-        case KEY_LEFT:
-            getyx(stdscr, cury, curx);
-            move(cury, curx - 1);
+    WINDOW *num_bar = newwin(parent_y-1, num_bar_w, 0, 0);
+    WINDOW *status_bar = newwin(1, parent_x, parent_y - 1, 0);
+    WINDOW *main_win = newwin(parent_y - 1, parent_x-num_bar_w, 0, num_bar_w);
 
-            refresh();
+    keypad(main_win, TRUE);
 
-            break;
+    start_color();
+    init_pair(1, COLOR_BLACK, COLOR_WHITE);
 
-        case KEY_RIGHT:
-            getyx(stdscr, cury, curx);
-            move(cury, curx + 1);
+    wbkgd(status_bar, COLOR_PAIR(1));
+    mvwprintw(status_bar, 0, 1, " STATUS: READ-ONLY MODE | Press 'q' to quit");
 
-            refresh();
+    wmove(main_win, cursor_y, cursor_x);
 
-            break;
-
-        case KEY_UP:
-            getyx(stdscr, cury, curx);
-            move(cury - 1, curx);
-
-            refresh();
-            break;
-
-        case KEY_DOWN:
-            getyx(stdscr, cury, curx);
-            move(cury + 1, curx);
-
-            refresh();
-            break;
-
-        case KEY_DELETE:
-            getyx(stdscr, cury, curx);
-            delch();
-
-            move(cury, curx - 1);
-            refresh();
-            break;
-
-        case CTRL_S:
-
-            int sd_h = 8;
-            int sd_w = 50;
-
-            int sd_start_y = (h - sd_h) / 2;
-            int sd_start_x = (w - sd_w) / 2;
-
-            WINDOW *save_dialog = create_newwindow(sd_h, sd_w, sd_start_y, sd_start_x);
-
-            char *line1 = "Do you want to save this file?";
-            char *line2 = "[Y]es\t[N]o";
-
-            long line1_x = (sd_w - strlen(line1)) / 2;
-            long line2_x = (sd_w - strlen(line2)) / 2;
-
-            mvwprintw(save_dialog, (sd_h / 2) - 1, line1_x, "%s", line1);
-            mvwprintw(save_dialog, (sd_h / 2) + 1, line2_x, "%s", line2);
-
-            wrefresh(save_dialog);
-
-            break;
-
-        default:
-            getyx(stdscr, cury, curx);
-            addch(ch);
-
-            move(cury, curx + 1);
-            refresh();
-        }
+    char *path = argv[1];
+    if(load_file(main_win, num_bar, path, &last_line) == 1) {
+        return 1;
     }
+
+    wrefresh(main_win);
+    wrefresh(status_bar);
+    wrefresh(num_bar);
+
+    int ch;
+
+    while ((ch = wgetch(main_win)) != 'q')
+    {
+        getyx(main_win, cursor_y, cursor_x);
+        if (ch == 'l') {
+            wmove(main_win, cursor_y, cursor_x + 1);
+        }
+        if (ch == 'h') {
+            wmove(main_win, cursor_y, cursor_x - 1);
+        }
+        if (ch == 'j') {
+            wmove(main_win, cursor_y + 1, cursor_x);
+        }
+        if (ch == 'k') {
+            wmove(main_win, cursor_y - 1, cursor_x);
+        }
+
+        wrefresh(main_win);
+    }
+
     endwin();
     return 0;
 }
