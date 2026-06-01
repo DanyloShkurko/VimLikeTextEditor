@@ -13,18 +13,18 @@ Created to practice C and systems programming — but functional enough for real
 - Open existing files or create new ones
 
 ## Build
-
+```
 cd ...//src
 make
-
+```
 Requires `ncurses` to be installed (`libncurses-dev` on Debian/Ubuntu, included on macOS).
 
 ## Run
-
+```
 cd ...//bin
 ./text_editor         # open existing file
 ./text_editor new_file.txt  # create new file
-
+```
 ## Keybindings
 
 ### Normal mode
