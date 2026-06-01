@@ -1,10 +1,11 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include <ncurses.h>
+#include "../buffer/buffer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-int load_file(WINDOW *window, WINDOW *num_bar, char *path, int *line);
+int load_file(Buffer *buf, const char *path);
+int save_file(const Buffer *buf, const char *path);
 
 #endif

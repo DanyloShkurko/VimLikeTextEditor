@@ -1,59 +1,38 @@
 #include "file_manager.h"
+#include <stdio.h>
+#include <string.h>
 
-int load_file(WINDOW *window, WINDOW *num_bar, char *path, int *line)
-{
-    int ch, prev;
-    FILE *fp;
-    int goto_prev = FALSE, y, x;
+#define LINE_BUF_SIZE 4096
 
-    fp = fopen(path, "r");
+int load_file(Buffer *buf, const char *path) {
+  FILE *fp = fopen(path, "r");
+  if (fp == NULL)
+    return 1;
 
-    if (fp == NULL)
-    {
-        perror("\n\tCannot open input file!");
-        return 1;
-    }
+  char line_buf[LINE_BUF_SIZE];
+  while (fgets(line_buf, sizeof(line_buf), fp)) {
+    int len = (int)strlen(line_buf);
+    if (len > 0 && line_buf[len - 1] == '\n')
+      line_buf[len - 1] = '\0';
+    buffer_insert_line(buf, buf->count, line_buf);
+  }
 
-    prev = EOF;
-    while ((ch = fgetc(fp)) != EOF)
-    {
-        if (prev == '/' && ch == '*')
-        {
-            wattron(window, A_BOLD);
-            goto_prev = TRUE;
-        }
+  fclose(fp);
+  return 0;
+}
 
-        if (goto_prev == TRUE)
-        {
-            getyx(window, y, x);
-            wmove(window, y, x - 1);
+int save_file(const Buffer *buf, const char *path) {
+  FILE *fp = fopen(path, "w");
+  if (fp == NULL) {
+    perror("\n\tCannot open output file!");
+    return 1;
+  }
 
-            wprintw(window, "%c%c", '/', ch);
+  for (int i = 0; i < buf->count; i++) {
+    fputs(buf->lines[i], fp);
+    fputc('\n', fp);
+  }
 
-            ch = 'a';
-
-            goto_prev = FALSE;
-        }
-        else
-        {
-            wprintw(window, "%c", ch);
-            wrefresh(window);
-
-            if (prev == '*' && ch == '/')
-            {
-                wattroff(window, A_BOLD);
-            }
-            prev = ch;
-        }
-
-        if (ch == '\n')
-        {
-            char *line_num = (char *)malloc(6 * sizeof(char));
-            sprintf(line_num, "%d\n", (*line)++);
-
-            waddstr(num_bar, line_num);
-        }
-    }
-
-    return 0;
+  fclose(fp);
+  return 0;
 }
